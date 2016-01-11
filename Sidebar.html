@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <style>    
+      body {
+      background: #AAA;
+      }
+      #scratchpad {
+        width: 100%;
+        min-height: 100vh;
+        padding: 1rem 0.5rem;
+        box-sizing: border-box;
+        font-size: 0.75rem;
+        line-height: 1.2rem;
+        background-color: #FFC;
+        background-image: linear-gradient(hsla(210, 50%, 30%, .25) 1px, transparent 1px);
+        background-size: 100% 1.2rem;
+        background-origin: content-box;
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  
+  <body>
+  
+    <div id="scratchpad" contenteditable="false"></div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>
+    
+      function init() {
+      
+        google.script.run
+          .withSuccessHandler(loadContent)
+          .getContent();
+          
+        var scratchpad = $('#scratchpad');
+        scratchpad.bind("input", saveContent);
+        $(scratchpad).bind('keydown', function(event) {
+          if (event.ctrlKey || event.metaKey)
+            switch (String.fromCharCode(event.which).toLowerCase()) {
+              case 's':
+                event.preventDefault();
+                saveContent(true);
+            }
+        });
+        
+      }
+      
+      function loadContent(content) {
+        var scratchpad = $('#scratchpad');
+        scratchpad.text(content);
+        scratchpad.css({'opacity': 1});
+        scratchpad.attr('contenteditable','true');
+      }
+      var saveTimeout = 5000;
+      var readyToSave = true;
+      var pendingSave = false;
+      function saveContent(manual) {
+        var scratchpad = $('#scratchpad');
+        if (manual) {
+          pendingSave = false;
+          google.script.run
+            .setContent(scratchpad.text());
+        } else if (readyToSave) {
+          readyToSave = false;
+          setTimeout(function() {
+            readToSave = true; 
+            if (pendingSave)
+              google.script.run
+                .setContent(scratchpad.text());
+          }, saveTimeout)
+          google.script.run
+            .setContent(scratchpad.text());
+        } else {
+          pendingSave = true;
+        }
+      }
+      
+      init();
+      
+    </script>
+    
+  </body>
+</html>
